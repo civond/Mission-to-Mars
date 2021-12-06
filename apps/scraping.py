@@ -19,6 +19,7 @@ def scrape_all():
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemispheres": hemisphere_data(browser),
         "last_modified": dt.datetime.now()
     }
 
@@ -35,7 +36,7 @@ def mars_news(browser):
     browser.visit(url)
 
     # Optional delay for loading the page
-    browser.is_element_present_by_css('div.list_text', wait_time=1)
+    browser.is_element_present_by_css('div.list_text', wait_time=3)
 
     # Convert the browser html to a soup object and then quit the browser
     html = browser.html
@@ -96,6 +97,37 @@ def mars_facts():
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html(classes="table table-striped")
     #return df.to_html()
+
+def hemisphere_data(browser):
+    hemi_url = 'https://marshemispheres.com/'
+    hemisphere_image_urls = []
+
+    i = 0
+    try:
+        while i <= 3:
+            temp_dict = {}
+            browser.visit(hemi_url)
+            hemisphere_img = browser.find_by_tag('h3')[i]
+            hemisphere_img.click()
+
+            html = browser.html
+            img_soup = soup(html, 'html.parser')
+            news_soup = soup(html, 'html.parser')
+
+            img_url_rel = img_soup.find('img', class_='wide-image').get('src')
+            img_url = f'https://marshemispheres.com/{img_url_rel}'
+
+            temp_dict['img_url'] = img_url
+            for title in news_soup.find_all('h2'):
+                article_title = title.get_text()
+                temp_dict['title'] = article_title
+
+            hemisphere_image_urls.append(temp_dict)
+            i += 1
+    except AttributeError:
+        return None, None
+
+    return hemisphere_image_urls
 
 if __name__ == "__main__":
 
